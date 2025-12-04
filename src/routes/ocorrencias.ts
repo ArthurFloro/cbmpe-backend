@@ -63,3 +63,41 @@ route.delete("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Erro ao deletar" });
   }
 });
+
+route.put(
+  "/:id",
+  upload.single("foto"),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = { ...req.body };
+
+      if (req.file) {
+        updates.foto = req.file.path;
+      }
+
+      if (req.body["publico[estimado]"]) {
+        updates.publico = {
+          estimado: req.body["publico[estimado]"],
+          presente: req.body["publico[presente]"],
+        };
+      }
+
+      const ocorrenciaAtualizada = await Ocorrencia.findByIdAndUpdate(
+        id,
+        updates,
+        { new: true }
+      );
+
+      if (!ocorrenciaAtualizada) {
+        return res.status(404).json({ message: "Ocorrência não encontrada" });
+      }
+
+      res.json(ocorrenciaAtualizada);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Erro ao atualizar ocorrência", details: error });
+    }
+  }
+);
